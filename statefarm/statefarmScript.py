@@ -1,4 +1,5 @@
 import os
+import cv2
 import glob
 import math
 import time
@@ -7,7 +8,9 @@ import numpy as np
 import pandas as pd
 from lasagne import layers
 from lasagne.updates import nesterov_momentum
+from lasagne.nonlinearities import softmax
 from nolearn.lasagne import NeuralNet
+
 
 from sklearn.utils import shuffle
 from sklearn.preprocessing import LabelEncoder
@@ -27,7 +30,7 @@ def load_train_cv(encoder):
   print('Reading train images')
   for j in range(10):
     print('Loading folder c{}'.format(j))
-    path = os.path.join('.', 'imgs', 'train', 'c' + str(j), '*.jpg')
+    path = os.path.join('imgs', 'train', 'c' + str(j), '*.jpg')
     files = glob.glob(path)
     for file in files:
       img = cv2.imread(file, 0)
@@ -55,7 +58,7 @@ def load_train_cv(encoder):
 
 def load_test():
   print('Reading test images')
-  path = os.path.join('.', 'imgs', 'test', '*.jpg')
+  path = os.path.join('input', 'test', '*.jpg')
   files = glob.glob(path)
   X_test = []
   X_test_id = []
@@ -78,37 +81,33 @@ def load_test():
     'float32') / 255.
   return X_test, X_test_id
 
-
 def construct_net1():
   net1 = NeuralNet(
-    layers=[
-      ('input', layers.InputLayer),
-      ('hidden', layers.DenseLayer),
-      ('output', layers.DenseLayer),
+  layers=[
+    ('input', layers.InputLayer),
+    ('hidden', layers.DenseLayer),
+    ('output', layers.DenseLayer),
     ],
-    input_shape=(None, 9216),
-    hidden_num_units=100,
-    output_nonlinearity=None,
-    output_num_units=9,
-    update=nesterov_momentum,
-    update_learning_rate=0.01,
-    update_momentum=0.9,
-    max_epochs=400,
-    verbose=1,
+  input_shape = (None, 1, 96, 96),
+  hidden_num_units=100,
+  output_nonlinearity = softmax,
+  output_num_units = 10,
+
+  update = nesterov_momentum,
+  update_learning_rate=0.01,
+  update_momentum = 0.9,
+  max_epochs=400,
+  verbose=1,
   )
   return net1
-
 
 def main():
   enc = LabelEncoder()
   X, y, _, _, _ = load_train_cv(enc)
-  print
-  X.shape
-  print
-  y.shape
+  print X.shape
+  print y.shape
   estimator = construct_net1()
   estimator.fit(X, y)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()
